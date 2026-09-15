@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Nordic Trail Backpack",
+    "main_category": "sports & fitness",
+    "actual_price": 1630,
+    "discount_price": 1200,
+    "rating": 4.5,
+    "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=640&q=80"
+  },
+  {
+    "id": 2,
+    "name": "Aurora Steel Bottle",
+    "main_category": "kitchen",
+    "actual_price": 2060,
+    "discount_price": null,
+    "rating": 4,
+    "image_url": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=640&q=80"
+  },
+  {
+    "id": 3,
+    "name": "Fjord Running Shoes",
+    "main_category": "sports & fitness",
+    "actual_price": 2490,
+    "discount_price": 1800,
+    "rating": 4.5,
+    "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=640&q=80"
+  },
+  {
+    "id": 4,
+    "name": "Lumen Desk Lamp",
+    "main_category": "home",
+    "actual_price": 2920,
+    "discount_price": null,
+    "rating": 4,
+    "image_url": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=640&q=80"
+  },
+  {
+    "id": 5,
+    "name": "Polar Fleece Jacket",
+    "main_category": "clothing",
+    "actual_price": 3350,
+    "discount_price": 2400,
+    "rating": 4.5,
+    "image_url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=640&q=80"
+  },
+  {
+    "id": 6,
+    "name": "Boreal Travel Mug",
+    "main_category": "kitchen",
+    "actual_price": 3780,
+    "discount_price": null,
+    "rating": 4,
+    "image_url": "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=640&q=80"
+  }
+]
