@@ -1,0 +1,10 @@
+{
+  "name": "nordcart-remediation-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/browser-behavior.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.0.1"
+  }
+}
