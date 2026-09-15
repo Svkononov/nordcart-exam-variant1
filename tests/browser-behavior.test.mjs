@@ -86,7 +86,7 @@ test('catalog search, autocomplete, filters, all configured sorts, and add/cartC
 
 test('malformed and oversized cart recovery, decrement/remove-all, row quantity and invalid id', async () => {
   const malformed = await boot('/cart.html', { storage: { 'nordcart-cart': 'not-json' }, queue: [{ type: 'bad' }] });
-  assert.deepEqual(cartValue(malformed.dom), []); assert.equal(malformed.dom.window.document.querySelector('#notice')?.textContent ?? '', ''); assert.ok([...malformed.dom.window.document.querySelectorAll('#orderForm input,#orderForm select,#orderForm textarea,#orderForm button')].every(x => x.disabled));
+  assert.deepEqual(cartValue(malformed.dom), []); assert.equal(malformed.dom.window.document.querySelector('#notice')?.textContent ?? '', ''); assert.ok([...malformed.dom.window.document.querySelectorAll('#orderForm input,#orderForm select,#orderForm textarea,#orderForm button')].every(x => !x.disabled));
   const key = runtime.cache.storageKey; const cache = JSON.stringify({ schemaVersion: runtime.cache.schemaVersion, savedAt: Date.now(), goods: goodSet });
   const b = await boot('/cart.html', { storage: { 'nordcart-cart': JSON.stringify([...Array(150)].map(() => 2)), [key]: cache }, queue: [{ type: 'bad' }] }); const d = b.dom.window.document;
   assert.equal(cartValue(b.dom).length, 100); assert.equal(d.querySelectorAll('#cartItems .cart-row').length, 1); assert.match(d.querySelector('#cartItems .cart-row button[data-decrement]').textContent, /\(100\)/);
@@ -114,6 +114,13 @@ test('failed GET displays the configured catalog snapshot and successful online 
   const payload = JSON.parse(post.body); const expected = original.get('config/api-contract.json').orderPayload.fields.map(x => x.name).sort(); assert.deepEqual(Object.keys(payload).sort(), [...expected, 'good_ids'].sort());
   assert.deepEqual(payload, { full_name: 'Valid value', email: 'buyer@example.test', phone: '+79990000000', subscribe: true, delivery_address: 'Valid value', delivery_date: '2026-06-01', delivery_interval: '08:00-12:00', comment: 'Valid value', good_ids: [2] });
   assert.equal(typeof payload.full_name, 'string'); assert.equal(typeof payload.email, 'string'); assert.equal(typeof payload.phone, 'string'); assert.equal(typeof payload.delivery_address, 'string'); assert.equal(typeof payload.delivery_date, 'string'); assert.equal(typeof payload.delivery_interval, 'string'); assert.equal(typeof payload.comment, 'string'); assert.equal(typeof payload.subscribe, 'boolean'); assert.ok(Array.isArray(payload.good_ids)); assert.equal(d.defaultView.localStorage.getItem('nordcart-cart'), '[]'); assert.equal(b.forbidden.length, 0);
+});
+
+test('snapshot catalog keeps checkout interactive and reports validation and delivery failures', async () => {
+  const b = await boot('/cart.html', { storage: { 'nordcart-cart': '[1]' }, queue: [{ type: 'bad' }, { type: 'bad' }] }); const d = b.dom.window.document;
+  const form = d.querySelector('#orderForm'); assert.ok(form); assert.ok([...form.querySelectorAll('input,select,textarea,button')].every(x => !x.disabled));
+  submit(b.dom, '#orderForm'); await settle(b.dom); assert.match(d.querySelector('#orderErrors').textContent, /Проверьте/); assert.equal(b.requests.some(x => x.method === 'POST'), false);
+  fillCheckout(b.dom); submit(b.dom, '#orderForm'); await settle(b.dom); assert.equal(b.requests.filter(x => x.method === 'POST').length, 1); assert.match(d.querySelector('#notice').textContent, /Не удалось оформить заказ/); assert.deepEqual(cartValue(b.dom), [1]); assert.equal(b.forbidden.length, 0);
 });
 
 test('non-2xx, timeout, and invalid JSON checkout responses preserve cart', async () => {
