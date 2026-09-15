@@ -1,7 +1,53 @@
-# NordCart remediation
+# NordCart
 
-Runtime starts only after validating config, API contract, messages, checkout schema and catalog-cache policy. API URL, copy, auth mode, timeout, UI rules, field constraints, numeric/date limits and delivery options are data artifacts. Missing or invalid artifacts leave an inert shell and perform no API mutation.
+Учебное веб-приложение каталога товаров с корзиной и оформлением заказа.
 
-The catalog never uses demo or outage fallback copy. A successful validated API response is cached under the configured key with schema version and TTL; on failure only an unexpired validated cache is rendered. Otherwise the catalog is a neutral configured empty state. Cache data is client-side, scoped by the configured key, and never authorizes checkout: only a current successful API response enables ordering.
+## Возможности
 
-The client never places credentials in a URL. A legacy localStorage key is read only for an approved Bearer adapter; sensitive credentials require a BFF. Checkout is enabled only for configured online mode after a successful GET. TLS/nginx/502 behavior is not emulated.
+- поиск, сортировка и фильтрация товаров;
+- корзина с изменением количества позиций;
+- оформление заказа с валидацией полей;
+- личный кабинет с просмотром и удалением заказов;
+- безопасная обработка недоступности API;
+- автоматические регрессионные проверки.
+
+## Запуск
+
+Опубликованная версия: <https://svkononov.github.io/nordcart-exam-variant1/>.
+
+Для запуска проверок требуется Node.js:
+
+```bash
+npm install
+npm test
+```
+
+## Источник каталога и fallback
+
+Каталог запрашивается из API, параметры которого описаны в
+`config/api-contract.json` и `config/runtime.json`.
+
+При успешном ответе API данные проходят проверку и сохраняются в локальный
+кэш. Если API недоступен, приложение сначала использует непросроченный
+валидный кэш, а при его отсутствии — проверенный каталог из
+`data/catalog.json`. Это отдельный data-артефакт: товарные данные не зашиты в
+клиентском JavaScript.
+
+Локальный каталог предназначен только для отображения и поиска. Оформление
+заказа остаётся недоступным, пока API не вернёт успешный актуальный ответ.
+
+## Безопасность
+
+- API URL, тексты интерфейса, правила кэширования и данные каталога вынесены
+  из кода в JSON-файлы.
+- Учётные данные не передаются в URL.
+- Текстовые значения выводятся безопасными DOM-методами.
+- URL изображений проверяются по разрешённым схеме и хосту.
+- При невалидной конфигурации приложение не выполняет запросы, изменяющие
+  данные.
+
+## Проверки
+
+Тесты проверяют загрузку и отображение каталога, fallback-цепочку, безопасность
+сетевых запросов, обработку корзины, валидацию заказа и отсутствие небезопасных
+DOM-паттернов.
