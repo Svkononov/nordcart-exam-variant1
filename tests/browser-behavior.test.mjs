@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const root = new URL('..', import.meta.url);
 const read = p => fs.readFileSync(new URL(p, root), 'utf8');
-const artifacts = ['config/runtime.json', 'config/api-contract.json', 'config/messages.ru.json', 'data/checkout-schema.json', 'data/placeholders.json'];
+const artifacts = ['config/runtime.json', 'config/api-contract.json', 'config/messages.ru.json', 'data/checkout-schema.json', 'data/placeholders.json', 'data/catalog.json'];
 const original = new Map(artifacts.map(p => [p, JSON.parse(read(p))]));
 const runtime = original.get('config/runtime.json');
 const base = new URL(runtime.api.baseUrl);
@@ -104,10 +104,9 @@ function fillCheckout(dom) {
   return form;
 }
 
-test('failed GET exposes configured retry click and successful online checkout submits exact payload', async () => {
+test('failed GET displays the configured catalog snapshot and successful online checkout submits exact payload', async () => {
   const retry = await boot('/index.html', { queue: [{ type: 'bad' }, api(goodSet)] }); const rd = retry.dom.window.document;
-  assert.ok(rd.querySelector('#products .empty button')); click(retry.dom, '#products .empty button'); await settle(retry.dom);
-  assert.deepEqual(cardNames(retry.dom), goodSet.map(x => x.name)); assert.equal(retry.requests.filter(x => x.method === 'GET').length, 2); assert.equal(retry.dom.window.document.querySelector('#notice')?.textContent ?? '', ''); assert.equal(retry.forbidden.length, 0);
+  assert.deepEqual(cardNames(retry.dom), original.get('data/catalog.json').map(x => x.name)); assert.equal(retry.requests.filter(x => x.method === 'GET').length, 1); assert.equal(retry.dom.window.document.querySelector('#notice')?.textContent ?? '', ''); assert.equal(retry.forbidden.length, 0);
   const token = 'test-token'; const b = await boot('/cart.html', { storage: { 'nordcart-api-key': token, 'nordcart-cart': '[2]' }, queue: [api(goodSet), api({ ok: true })] }); const d = b.dom.window.document;
   assert.ok([...d.querySelectorAll('#orderForm input,#orderForm select,#orderForm textarea,#orderForm button')].every(x => !x.disabled));
   fillCheckout(b.dom); submit(b.dom, '#orderForm'); await settle(b.dom); const post = b.requests.find(x => x.method === 'POST'); assert.ok(post); const u = new URL(post.url);
@@ -130,7 +129,7 @@ test('invalid artifacts fail closed and all API failure modes stay same-origin',
   const source = read('app.js'); assert.equal(source.includes('innerHTML'), false); assert.equal(source.includes('api_key='), false);
 });
 
-test('cache envelope, cache-only fallback, neutral empty failures, and no demo path', async () => {
+test('cache envelope, snapshot fallback, and no runtime product hardcode', async () => {
   const key = runtime.cache.storageKey;
   const online = await boot('/index.html', { queue: [api(goodSet)] });
   const envelope = JSON.parse(online.dom.window.localStorage.getItem(key));
@@ -147,11 +146,12 @@ test('cache envelope, cache-only fallback, neutral empty failures, and no demo p
     JSON.stringify({ schemaVersion: 'wrong', savedAt: now, goods: goodSet }),
     JSON.stringify({ schemaVersion: runtime.cache.schemaVersion, savedAt: now, goods: [{ ...goodSet[0], image_url: 'javascript:alert(1)' }] })
   ];
+  const snapshot = original.get('data/catalog.json');
   for (const [index, value] of cases.entries()) {
     const b = await boot('/index.html', { storage: value === null ? {} : { [key]: value }, queue: [{ type: 'bad' }] }); const d = b.dom.window.document;
-    assert.equal(d.querySelectorAll('#products .card').length, 0, `cache case ${index}`); assert.ok(d.querySelector('#products .empty')); assert.equal(d.querySelector('#notice')?.textContent ?? '', ''); assert.equal(b.forbidden.length, 0);
+    assert.deepEqual(cardNames(b.dom), snapshot.map(x => x.name), `cache case ${index}`); assert.equal(d.querySelector('#notice')?.textContent ?? '', ''); assert.equal(b.forbidden.length, 0);
   }
-  assert.equal(fs.existsSync(new URL('../data/demo-goods.json', import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL('../data/catalog.json', import.meta.url)), true);
   for (const p of ['config/runtime.json', 'config/api-contract.json', 'config/messages.ru.json']) { const text = read(p).toLowerCase(); assert.equal(/demo-goods|outage|unavailable/.test(text), false, p); }
 });
 

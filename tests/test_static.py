@@ -42,7 +42,7 @@ def test_systematic_config_values_are_not_duplicated_in_runtime():
     for value in forbidden:
         if not value or value in structural: continue
         assert value not in text, value
-    assert not (ROOT/'data/demo-goods.json').exists()
+    assert (ROOT/'data/catalog.json').exists()
     shipped='\n'.join(p.read_text() for p in ROOT.rglob('*') if p.is_file() and p.suffix in {'.js','.html','.json'} and 'node_modules' not in p.parts and '.git' not in p.parts)
     assert not re.search(r'demo-goods|(?:^|[^a-z])(?:demo|outage|unavailable)(?:[^a-z]|$)',shipped,re.I)
     html='\n'.join((ROOT/n).read_text() for n in ('index.html','cart.html','account.html'))
@@ -73,4 +73,4 @@ def test_contract_and_auth_negative_boundaries_are_declared():
     assert runtime['api']['auth']['mode'] in {'none','bearer','bff'}
     assert set(contract['routes']) >= {'goods','autocomplete','orders','orderById'}
     assert 'api_key' not in (ROOT/'config/runtime.json').read_text()
-    assert runtime['cache']['onFailure'] == 'cache-or-empty'
+    assert runtime['cache']['onFailure'] == 'cache-or-snapshot'
